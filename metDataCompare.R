@@ -61,18 +61,49 @@ ggsave(paste0(getwd(),"/Analysis/ElNino/Seasonal.MicroClimate.Measures.pdf"),g4,
 
 #create figure of ppt
 met_ppt<-read_csv(paste0(getwd(),"/MetData/LargeMetstation_ppt.csv"))
+met_lrg<-read_csv(paste0(getwd(),"/MetData/LargeMetstation_Monthly.csv"))
 harmat<-data.frame(x1=as.Date("2015-01-01"), x2=as.Date("2016-01-01"), x3=as.Date("2017-01-01"))
 g4<-met_ppt %>% ggplot() + 
   #geom_point(aes(month,maxT,color=factor(distance))) + 
   geom_line(aes(month,Tppt)) +
   geom_rect(data=strong, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), fill='orange', alpha=0.2) + 
   geom_rect(data=v_strong, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), fill='red', alpha=0.2) + 
-  geom_vline(xintercept=wet_start$x1,linetype="dashed",color="blue")+geom_vline(xintercept=wet_end$x2,linetype="dotted")+
+  geom_vline(xintercept=wet_start$x1,linetype="dashed",color="blue")+geom_vline(xintercept=wet_end$x2,linetype="dotted",color="blue")+
   theme_classic() + xlab("") + ylab("Monthly Precipitation [mm]") +
   geom_text(aes(x=harmat$x1,y=250,label="Harmattan"),color="grey",size=3.5)+geom_text(aes(x=harmat$x2,y=250,label="Harmattan"),color="grey",size=3.5)+
   geom_text(aes(x=harmat$x3,y=250,label="Harmattan"),color="grey",size=3.5)+
   geom_text(aes(x=wet_start$x1[2],y=200,label="\nFirst Wet Season"),color="blue",angle=90,size=3)+
   geom_text(aes(x=wet_start$x1[1],y=200,label="\nShort Wet Season"),color="blue",angle=90,size=3) 
+
+g1b<-met_ppt %>% filter(month<="2017-07-01") %>% ggplot() + 
+  #geom_point(aes(month,maxT,color=factor(distance))) + 
+  geom_line(aes(month,Tppt)) +
+  geom_rect(data=strong, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), fill='red', alpha=0.2) + 
+  geom_rect(data=v_strong, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), fill='red', alpha=0.2) + 
+  geom_vline(xintercept=wet_start$x1,linetype="dashed",color="blue")+geom_vline(xintercept=wet_end$x2,linetype="dotted",color="blue")+
+  theme_classic() + xlab("") + ylab("Monthly Precipitation\n[mm]") +
+  #geom_text(aes(x=harmat$x1,y=250,label="Harmattan"),color="grey",size=3.5)+geom_text(aes(x=harmat$x2,y=250,label="Harmattan"),color="grey",size=3.5)+
+  #geom_text(aes(x=harmat$x3,y=250,label="Harmattan"),color="grey",size=3.5)+
+  geom_text(aes(x=wet_start$x1[2],y=100,label="\nLong Wet Season"),color="blue",angle=90,size=3)+
+  geom_text(aes(x=wet_start$x1[1],y=100,label="\nShort Wet Season"),color="blue",angle=90,size=3) 
+
+g2b<-met_lrg %>% filter(month<="2017-07-01") %>% ggplot() + 
+  #geom_point(aes(month,maxT,color=factor(distance))) + 
+  geom_line(aes(month,tmax)) +
+  geom_rect(data=strong, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), fill='red', alpha=0.2) + 
+  geom_rect(data=v_strong, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), fill='red', alpha=0.2) +
+  geom_vline(xintercept=wet_start$x1,linetype="dashed",color="blue")+geom_vline(xintercept=wet_end$x2,linetype="dotted",color="blue")+
+  theme_classic() + xlab("Date") + ylab("Maximum Temperature\n[C]")+theme(legend.position="bottom")
+
+g3b<-met_lrg %>% filter(month<="2017-07-01") %>% ggplot() + 
+  #geom_point(aes(month,maxT,color=factor(distance))) + 
+  geom_line(aes(month,vpd.max)) +
+  geom_rect(data=strong, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), fill='red', alpha=0.2) + 
+  geom_rect(data=v_strong, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), fill='red', alpha=0.2) +
+  geom_vline(xintercept=wet_start$x1,linetype="dashed",color="blue")+geom_vline(xintercept=wet_end$x2,linetype="dotted",color="blue")+
+  theme_classic() + xlab("Date") + ylab("Maximum Vapour Pressure\nDeficit [hPa]")+theme(legend.position="bottom")
+ggarrange(g1b,g2b,g3b,ncol=1,nrow=3,align="h")
+ggsave(paste0(getwd(),"/Analysis/ElNino/ElNino.PPT.TMAX.VPD.pdf"),height=6,width=8)
 
 g1<-met_summ %>% ggplot() + 
   #geom_point(aes(month,stress.mm,color=factor(distance))) + 
@@ -87,6 +118,29 @@ g1<-met_summ %>% ggplot() +
 
 g5<-grid.arrange(g4,g1,g2,g3,ncol=1)
 ggsave(paste0(getwd(),"/Analysis/ElNino/Seasonal.MicroClimate.Measures.wppt.pdf"),g5,height=10,width=8)
+
+g6<-met_ppt %>% ggplot() + 
+  #geom_point(aes(month,maxT,color=factor(distance))) + 
+  geom_line(aes(month,Tppt)) +
+  geom_rect(data=strong, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), fill='orange', alpha=0.2) + 
+  geom_rect(data=v_strong, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), fill='red', alpha=0.2) + 
+  geom_vline(xintercept=wet_start$x1,linetype="dashed",color="blue")+geom_vline(xintercept=wet_end$x2,linetype="dotted")+
+  theme_classic() + xlab("") + ylab("Monthly\nPrecipitation [mm]") +
+  annotate("text",x=harmat$x1,y=250,label="Harmattan",color="black",size=5)+annotate("text",x=harmat$x2,y=250,label="Harmattan",color="black",size=5)+
+  annotate("text",x=harmat$x3,y=250,label="Harmattan",color="black",size=5)+
+  annotate("text",x=wet_start$x1[2],y=200,label="\nFirst Wet Season",color="blue",angle=90,size=4)+
+  annotate("text",x=wet_start$x1[1],y=200,label="\nShort Wet Season",color="blue",angle=90,size=4)+theme(text = element_text(size=14))
+g7<-met_summ %>% ggplot() + 
+  #geom_point(aes(month,maxT,color=factor(distance))) + 
+  geom_line(aes(month,maxT,color=factor(distance))) +
+  geom_rect(data=strong, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), fill='orange', alpha=0.2) + 
+  geom_rect(data=v_strong, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), fill='red', alpha=0.2) + scale_color_discrete(name="Distance from\nForest")+
+  geom_vline(xintercept=wet_start$x1,linetype="dashed",color="blue")+geom_vline(xintercept=wet_end$x2,linetype="dotted")+
+  theme_classic() + xlab("Date") + ylab("Maximum\nTemperature [C]")+theme(legend.position="bottom")+theme(text = element_text(size=14))
+
+ggarrange(g6,g7,ncol=1,nrow=2,common.legend = TRUE, legend = "bottom",labels="auto",
+          font.label = list(size = 18, color = "black", face = "bold", family = NULL))
+ggsave("/users/alex/Documents/Research/Africa/ECOLIMITS/ElNino/Synthesis/Figure7.pdf",width=12,height=6)
 
 met_month<-read_csv(paste0(getwd(),"/MetData/Monthly_metdata_withcanopygap.csv"))
 

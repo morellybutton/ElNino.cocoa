@@ -1,43 +1,44 @@
 #Comparative figures between 2014/15, 2015/16 and 2016/17 for main ES factors
 
 #library(ggplot2)
-library(reshape)
+#library(reshape)
 library(gridExtra)
 library(tidyverse)
+library(ggpubr)
 
 setwd("/Volumes/ELDS/ECOLIMITS/Ghana/Kakum/")
 
 #create dataframe for figures (harvest, flower buds, mean T, water stress, soil moisture, disease incidence, cherelle set)
 d.F.plot<-read.csv(paste0(getwd(),"/Analysis/ES/ES_analysis_dataset.2014.csv"))
-d.F<- data_frame(Plot=d.F.plot$Plot,Distance=d.F.plot$Distance,HeavyCrop=d.F.plot$HeavyCrop,FBuds=d.F.plot$FBuds,Flowers=d.F.plot$Flowers,Chset=d.F.plot$Chset,
-                 Mist=d.F.plot$Mist,CPB=d.F.plot$PropCPB,BP=d.F.plot$PropBP,SoilMoist=d.F.plot$soil.moist,Tmean=d.F.plot$Tmean,maxVPD=d.F.plot$maxVPD,
-                 Stress.mm=d.F.plot$stress.mm)
-d.F<-d.F %>% group_by(Plot) %>% mutate(Flowers=sum(0.95*FBuds,Flowers))
+d.F<- d.F.plot %>% filter(tree_size=="all") %>% select(Plot,Distance,HeavyCrop,Chset,FBuds,Flowers,Mist,PropCPB,PropBP,soil.moist,Tmax,maxVPD,stress.mm) %>% 
+  rename(CPB=PropCPB,BP=PropBP,SoilMoist=soil.moist,Stress.mm=stress.mm)
+
+d.F<-d.F %>% group_by(Plot) %>% mutate(Flowers=sum(0.95*FBuds,Flowers)) %>% ungroup()
 
 df<- d.F %>% gather(key="variable",value="i2014",c(-Plot,-Distance))
 
 d.F.plot<-read.csv(paste0(getwd(),"/Analysis/ES/ES_analysis_dataset.2015.csv"))
-d.F<- data_frame(Plot=d.F.plot$Plot,Distance=d.F.plot$Distance,HeavyCrop=d.F.plot$HeavyCrop,FBuds=d.F.plot$FBuds,Flowers=d.F.plot$Flowers,Chset=d.F.plot$Chset,
-                 Mist=d.F.plot$Mist,CPB=d.F.plot$PropCPB,BP=d.F.plot$PropBP,SoilMoist=d.F.plot$soil.moist,Tmean=d.F.plot$Tmean,maxVPD=d.F.plot$maxVPD,
-                 Stress.mm=d.F.plot$stress.mm)
-d.F<-d.F %>% group_by(Plot) %>% mutate(Flowers=sum(0.95*FBuds,Flowers))
+d.F<- d.F.plot %>% filter(tree_size=="all") %>% select(Plot,Distance,HeavyCrop,Chset,FBuds,Flowers,Mist,PropCPB,PropBP,soil.moist,Tmax,maxVPD,stress.mm) %>% 
+  rename(CPB=PropCPB,BP=PropBP,SoilMoist=soil.moist,Stress.mm=stress.mm)
+
+d.F<-d.F %>% group_by(Plot) %>%   mutate(Flowers=sum(0.95*FBuds,Flowers)) %>% ungroup()
 d.F<-d.F %>% gather(key="variable",value="i2015",c(-Plot,-Distance))
 
 df <-left_join(df,d.F %>% select(Plot,variable,i2015),by=c("Plot","variable"))
 
 d.F.plot<-read.csv(paste0(getwd(),"/Analysis/ES/ES_analysis_dataset.2016.csv"))
-d.F<- data_frame(Plot=d.F.plot$Plot,Distance=d.F.plot$Distance,HeavyCrop=d.F.plot$HeavyCrop,FBuds=d.F.plot$FBuds,Flowers=d.F.plot$Flowers,Chset=d.F.plot$Chset,
-                 Mist=d.F.plot$Mist,CPB=d.F.plot$PropCPB,BP=d.F.plot$PropBP,SoilMoist=d.F.plot$soil.moist,Tmean=d.F.plot$Tmean,maxVPD=d.F.plot$maxVPD,
-                 Stress.mm=d.F.plot$stress.mm)
-d.F<-d.F %>% group_by(Plot) %>% mutate(Flowers=sum(0.95*FBuds,Flowers))
+d.F<- d.F.plot %>% filter(tree_size=="all") %>% select(Plot,Distance,HeavyCrop,Chset,FBuds,Flowers,Mist,PropCPB,PropBP,soil.moist,Tmax,maxVPD,stress.mm) %>% 
+  rename(CPB=PropCPB,BP=PropBP,SoilMoist=soil.moist,Stress.mm=stress.mm)
+
+d.F<-d.F %>% group_by(Plot) %>% mutate(Flowers=sum(0.95*FBuds,Flowers)) %>% ungroup()
 d.F<-d.F %>% gather(key="variable",value="i2016",c(-Plot,-Distance))
 
 df <-left_join(df,d.F %>% select(Plot,variable,i2016),by=c("Plot","variable"))
 df$Distance<-factor(df$Distance)
 
 df2<-df %>% filter(variable!="FBuds",variable!="maxVPD")
-df2$variable<-factor(df2$variable,labels = c("Heavy Crop [kg tree-1]","Flowers","Cherelle Set [%]","Mistletoe [%]","Capsid Incidence [%]",
-                                             "Black Pod Incidence [%]","Soil Moisture [%]","Mean Temperature [C]","Water Stress [mm]"))
+df2$variable<-factor(df2$variable,labels = c("Heavy Crop [kg tree-1]","Cherelle Set [%]","Flowers","Mistletoe [%]","Capsid Incidence [%]",
+                                             "Black Pod Incidence [%]","Soil Moisture [%]","Max Temperature [C]","Water Stress [mm]"))
 
 #plot comparisons between 2014 and 2015
 #plot comparisons, yield
@@ -82,11 +83,11 @@ g7<-ggplot(df[df$variable=="SoilMoist",],aes(i2014,i2015,group=Distance))+geom_p
     legend.key = element_rect(colour = "white", fill = NA),legend.position="top"
   ) + ylim(10,25)+xlim(10,25)
 
-g8<-ggplot(df[df$variable=="Tmean",],aes(i2014,i2015,group=Distance))+geom_point(aes(color=Distance))+geom_abline(slope=1,intercept=0,linetype="dashed")+
-  xlab("Mean Temperature 2014 [C]")+ylab("Mean Temperature 2015 [C]")+theme(
+g8<-ggplot(df[df$variable=="Tmax",],aes(i2014,i2015,group=Distance))+geom_point(aes(color=Distance))+geom_abline(slope=1,intercept=0,linetype="dashed")+
+  xlab("Maximum Temperature 2014 [C]")+ylab("Maximum Temperature 2015 [C]")+theme(
     panel.background=element_blank(),axis.line.x = element_line(color = 'black'),axis.line.y = element_line(color = 'black'),
     legend.key = element_rect(colour = "white", fill = NA),legend.position="top"
-  ) + ylim(25,35)+xlim(25,35)
+  ) + ylim(28,41)+xlim(28,41)
 
 g9<-ggplot(df[df$variable=="Stress.mm",],aes(i2014,i2015,group=Distance))+geom_point(aes(color=Distance))+geom_abline(slope=1,intercept=0,linetype="dashed")+
   xlab("Water Stress 2014 [mm]")+ylab("Water Stress 2015 [mm]")+theme(
@@ -94,8 +95,8 @@ g9<-ggplot(df[df$variable=="Stress.mm",],aes(i2014,i2015,group=Distance))+geom_p
     legend.key = element_rect(colour = "white", fill = NA),legend.position="top"
   ) + ylim(-50,26)+xlim(-50,26)
 
-g10<-grid.arrange(g1,g2,g3,g4,g5,g6,g7,g8,g9,nrow=3)
-ggsave(paste0(getwd(),"/Analysis/ElNino/ES.Factor.Compare.2014_2015.pdf"),g10,height=10,widt=10)
+ggarrange(g1,g2,g3,g4,g5,g6,g7,g8,g9,nrow=3,ncol=3,common.legend=T)
+ggsave(paste0(getwd(),"/Analysis/ElNino/ES.Factor.Compare.2014_2015.pdf"),height=10,width=10)
 
 #plot comparisons between 2015 and 2016
 #plot comparisons, yield
@@ -140,11 +141,11 @@ g7<-ggplot(df[df$variable=="SoilMoist",],aes(i2015,i2016,group=Distance))+geom_p
     legend.key = element_rect(colour = "white", fill = NA),legend.position="top"
   ) + ylim(10,25)+xlim(10,25)
 
-g8<-ggplot(df[df$variable=="Tmean",],aes(i2015,i2016,group=Distance))+geom_point(aes(color=Distance))+geom_abline(slope=1,intercept=0,linetype="dashed")+
-  xlab("Mean Temperature 2015 [C]")+ylab("Mean Temperature 2016 [C]")+theme(
+g8<-ggplot(df[df$variable=="Tmax",],aes(i2015,i2016,group=Distance))+geom_point(aes(color=Distance))+geom_abline(slope=1,intercept=0,linetype="dashed")+
+  xlab("Maximum Temperature 2015 [C]")+ylab("Maximum Temperature 2016 [C]")+theme(
     panel.background=element_blank(),axis.line.x = element_line(color = 'black'),axis.line.y = element_line(color = 'black'),
     legend.key = element_rect(colour = "white", fill = NA),legend.position="top"
-  ) + ylim(25,35)+xlim(25,35)
+  ) + ylim(28,41)+xlim(28,41)
 
 g9<-ggplot(df[df$variable=="Stress.mm",],aes(i2015,i2016,group=Distance))+geom_point(aes(color=Distance))+geom_abline(slope=1,intercept=0,linetype="dashed")+
   xlab("Water Stress 2015 [mm]")+ylab("Water Stress 2016 [mm]")+theme(
@@ -152,8 +153,8 @@ g9<-ggplot(df[df$variable=="Stress.mm",],aes(i2015,i2016,group=Distance))+geom_p
     legend.key = element_rect(colour = "white", fill = NA),legend.position="top"
   ) + ylim(-50,26)+xlim(-50,26)
 
-g10<-grid.arrange(g1,g2,g3,g4,g5,g6,g7,g8,g9,nrow=3)
-ggsave(paste0(getwd(),"/Analysis/ElNino/ES.Factor.Compare.2015_2016.pdf"),g10,height=10,widt=10)
+ggarrange(g1,g2,g3,g4,g5,g6,g7,g8,g9,nrow=3,ncol=3,common.legend = T)
+ggsave(paste0(getwd(),"/Analysis/ElNino/ES.Factor.Compare.2015_2016.pdf"),height=10,widt=10)
 
 #plot comparisons between 2014 and 2016
 #plot comparisons, yield
@@ -198,11 +199,11 @@ g7<-ggplot(df[df$variable=="SoilMoist",],aes(i2014,i2016,group=Distance))+geom_p
     legend.key = element_rect(colour = "white", fill = NA),legend.position="top"
   ) + ylim(10,25)+xlim(10,25)
 
-g8<-ggplot(df[df$variable=="Tmean",],aes(i2014,i2016,group=Distance))+geom_point(aes(color=Distance))+geom_abline(slope=1,intercept=0,linetype="dashed")+
-  xlab("Mean Temperature 2014 [C]")+ylab("Mean Temperature 2016 [C]")+theme(
+g8<-ggplot(df[df$variable=="Tmax",],aes(i2014,i2016,group=Distance))+geom_point(aes(color=Distance))+geom_abline(slope=1,intercept=0,linetype="dashed")+
+  xlab("Maximum Temperature 2014 [C]")+ylab("Maximum Temperature 2016 [C]")+theme(
     panel.background=element_blank(),axis.line.x = element_line(color = 'black'),axis.line.y = element_line(color = 'black'),
     legend.key = element_rect(colour = "white", fill = NA),legend.position="top"
-  ) + ylim(25,35)+xlim(25,35)
+  ) + ylim(28,41)+xlim(28,41)
 
 g9<-ggplot(df[df$variable=="Stress.mm",],aes(i2014,i2016,group=Distance))+geom_point(aes(color=Distance))+geom_abline(slope=1,intercept=0,linetype="dashed")+
   xlab("Water Stress 2014 [mm]")+ylab("Water Stress 2016 [mm]")+theme(
@@ -210,5 +211,5 @@ g9<-ggplot(df[df$variable=="Stress.mm",],aes(i2014,i2016,group=Distance))+geom_p
     legend.key = element_rect(colour = "white", fill = NA),legend.position="top"
   ) + ylim(-50,26)+xlim(-50,26)
 
-g10<-grid.arrange(g1,g2,g3,g4,g5,g6,g7,g8,g9,nrow=3)
-ggsave(paste0(getwd(),"/Analysis/ElNino/ES.Factor.Compare.2014_2016.pdf"),g10,height=10,widt=10)
+ggarrange(g1,g2,g3,g4,g5,g6,g7,g8,g9,nrow=3,ncol=3,common.legend=T)
+ggsave(paste0(getwd(),"/Analysis/ElNino/ES.Factor.Compare.2014_2016.pdf"),height=10,widt=10)
