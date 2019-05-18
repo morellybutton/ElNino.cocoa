@@ -28,9 +28,10 @@ yld14_mod2 <- gam(HeavyCrop ~ s(Cocoa.density, k = 5, bs = "tp") + s(Canopy.gap.
                   data=dF.14, method="REML", family="gaussian",select=TRUE)
 summary(yld14_mod2)
 
-
+pdf(paste0(getwd(),"/Analysis/ES/GAM.yield_factors.pdf"))
 par(mfrow=c(3,3))
 plot.gam(yld14_mod2,shade=T)
+dev.off()
 
 #run model checks
 yld14.fit <- mgcViz::getViz(yld14_mod2)
@@ -63,4 +64,30 @@ plot(fitted(b), observed.y, xlab = "Fitted Values",
 abline(a=0,b=1,lty=3)
 dev.off()
 
+b1<-plot.gam(yld14_mod2)
 
+
+#compare age of cocoa to distance
+
+tmp1<-summary(lm(Age.of.cocoa~distance.cont,data=dF.14))
+g1<-ggplot(dF.14,aes(distance.cont,Age.of.cocoa)) + geom_point() + stat_smooth(method="lm") +
+  theme_classic()+annotate("text",x=500,y=40,label = paste0("italic(R) ^ 2 == ",signif(tmp1$adj.r.squared,3)), parse = TRUE)+
+  xlab("") + ylab("Age of Cocoa [years]")
+
+tmp2<-summary(lm(Tot.P~distance.cont,data=dF.14))
+g2<-ggplot(dF.14,aes(distance.cont,Tot.P)) + geom_point() + stat_smooth(method="lm") +
+  theme_classic()+annotate("text",x=500,y=12,label = paste0("italic(R) ^ 2 == ",signif(tmp2$adj.r.squared,3)), parse = TRUE)+
+  xlab("") + ylab("Available Phosphorus [ppm]")
+
+tmp3<-summary(lm(CN.ratio~distance.cont,data=dF.14))
+g3<-ggplot(dF.14,aes(distance.cont,CN.ratio)) + geom_point() + stat_smooth(method="lm") +
+  theme_classic()+annotate("text",x=500,y=16,label = paste0("italic(R) ^ 2 == ",signif(tmp3$adj.r.squared,3)), parse = TRUE)+
+  xlab("Distance from Forest [m]") + ylab("Soil C:N")
+
+tmp4<-summary(lm(K.meq~distance.cont,data=dF.14))
+g4<-ggplot(dF.14,aes(distance.cont,K.meq)) + geom_point() + stat_smooth(method="lm") +
+  theme_classic()+annotate("text",x=500,y=3,label = paste0("italic(R) ^ 2 == ",signif(tmp4$adj.r.squared,3)), parse = TRUE)+
+  xlab("Distance from Forest [m]") + ylab("Potassium [meq]")
+
+ggpubr::ggarrange(g1,g2,g3,g4,ncol=2,nrow=2,labels="auto")
+ggsave(paste0(getwd(),"/Analysis/ES/DistanceFromForestPredictors.pdf"),width=9,height = 8)

@@ -15,6 +15,10 @@ g4<-ggplot(dF,aes(PropBP)) + geom_freqpoly(stat="bin",bins=15,aes(color=season))
 ggarrange(g1,g2,g3,g4,ncol=2,nrow=2,common.legend = T)
 ggsave("/Users/alex/Documents/Research/Africa/ECOLIMITS/Pubs/ElNino/Cocoa/SeasonalMeasures_histograms.pdf")
 
+ggplot(dF,aes(HeavyCrop)) + geom_freqpoly(stat="bin",bins=25,aes(color=season),size=1) + theme_classic() + xlab("Heavy Crop [kg/tree]") +
+  theme(legend.position="bottom",text=element_text(size=16))
+ggsave("/Users/alex/Documents/Research/Africa/ECOLIMITS/Pubs/Conferences/Agroforestry/YieldMeasures_histogram.pdf",width=5,height=4)
+
 #create yield model figures, 2014 and yield diff for 2015 & 2016
 #cocoa yield model
 tmp<-read.csv(paste0(getwd(),"/Analysis/ES/Model.Average_HC1415_delta6.median.csv"))
