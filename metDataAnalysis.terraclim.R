@@ -29,25 +29,26 @@ ggplot(terra_clim,aes(Date,pet)) + geom_line(aes()) + theme_classic()
 #anomalies around year of study, with harvesting dates
 #harvest<-data_frame(c("2014-10-01","2015-10-01","2016-10-01"))
 #colnames(harvest)<-"harvest.date"
-g1<-ggplot(terra_clim %>% filter(year>=2015&year<2017),aes(Date,precip_anom)) + geom_bar(stat="identity") + theme_classic() +
+g1<-ggplot(terra_clim %>% filter(year>=2014&year<2017),aes(Date,precip_anom)) + geom_bar(stat="identity") + theme_classic() +
   geom_rect(inherit.aes = F,mapping=aes(xmin=as.Date("2015-06-01"),xmax=as.Date("2016-03-01"),ymin=-Inf,ymax=Inf),fill='lightgrey',alpha=1/50) +
   ylab("Precipitation Anomaly\n[mm]") + xlab("Date") + theme(text=element_text(size=16)) + geom_vline(aes(xintercept=as.Date("2015-10-01")),linetype="dashed",color="red") +
   geom_vline(aes(xintercept=as.Date("2016-10-01")),linetype="dashed",color="red")
 
-g2<-ggplot(terra_clim %>% filter(year>=2015&year<2017),aes(Date,vpd_anom)) + geom_bar(stat="identity") + theme_classic() +
+g2<-ggplot(terra_clim %>% filter(year>=2014&year<2017),aes(Date,vpd_anom)) + geom_bar(stat="identity") + theme_classic() +
   geom_rect(inherit.aes = F,mapping=aes(xmin=as.Date("2015-06-01"),xmax=as.Date("2016-03-01"),ymin=-Inf,ymax=Inf),fill='lightgrey',alpha=1/50) +
   ylab("Vapour Pressure Deficit\nAnomaly [kPa]") + xlab("Date") + theme(text=element_text(size=16))+ geom_vline(aes(xintercept=as.Date("2015-10-01")),linetype="dashed",color="red") +
   geom_vline(aes(xintercept=as.Date("2016-10-01")),linetype="dashed",color="red")
 
-g3<-ggplot(terra_clim %>% filter(year>=2015&year<2017),aes(Date,tmax_anom)) + geom_bar(stat="identity") + theme_classic() +
+g3<-ggplot(terra_clim %>% filter(year>=2014&year<2017),aes(Date,tmax_anom)) + geom_bar(stat="identity") + theme_classic() +
   geom_rect(inherit.aes = F,mapping=aes(xmin=as.Date("2015-06-01"),xmax=as.Date("2016-03-01"),ymin=-Inf,ymax=Inf),fill='lightgrey',alpha=1/50) +
   ylab("Maximum Temperature\nAnomaly [C]") + xlab("Date") + theme(text=element_text(size=16))+ geom_vline(aes(xintercept=as.Date("2015-10-01")),linetype="dashed",color="red") +
   geom_vline(aes(xintercept=as.Date("2016-10-01")),linetype="dashed",color="red")
 ggpubr::ggarrange(g1,g2,g3,ncol=1,nrow=3,align="hv")
 #ggsave(paste0(getwd(),"/Analysis/ElNino/TerraClim.Anom.Comparison.pdf"))
 
-ggpubr::ggarrange(g1,g3,ncol=1,nrow=2,align="hv")
-ggsave("/users/alex/Documents/Research/Africa/ECOLIMITS/Pubs/Conferences/Agroforestry/TerraClim.Anom.Comparison.pdf",height=6,width=8)
+ggpubr::ggarrange(g1,g2,g3,ncol=1,nrow=3,align="hv")
+#ggsave("/users/alex/Documents/Research/Africa/ECOLIMITS/Pubs/Conferences/Agroforestry/TerraClim.Anom.Comparison.pdf",height=6,width=8)
+ggsave("/users/alex/Documents/Research/Africa/ECOLIMITS/Pubs/ElNino/Cocoa/TerraClim.Anom.Comparison.pdf",height=9,width=8)
 
 
 
