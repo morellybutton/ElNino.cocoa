@@ -1,6 +1,6 @@
 #Code for analyzing cocoa yield anomalies during the El Nino
 library(tidyverse)
-library(ggpubr)
+#library(ggpubr)
 
 setwd("/Volumes/ELDS/ECOLIMITS/Ghana/Kakum/")
 #year="2015"
@@ -12,41 +12,86 @@ dF.14<-dF %>% filter(season=="2014/15"&tree_size=="all") %>% rename(HeavyCrop14=
 dF <- left_join(dF,dF.14 %>% select(plot,HeavyCrop14,LightCrop14,Tmax14,maxVPD14))
 #dF <- dF %>% distinct(plot,tree_size,season,.keep_all = T)
 
-dF.15<-dF %>% filter(season=="2015/16"&tree_size=="all") %>% rename(Tmax15=Tmax,maxVPD15=maxVPD)
-dF <- left_join(dF,dF.15 %>% select(plot,Tmax15,maxVPD15))
+dF.15<-dF %>% filter(season=="2015/16"&tree_size=="all") %>% rename(Tmax15=Tmax,maxVPD15=maxVPD,HeavyCrop15=HeavyCrop,LightCrop15=LightCrop)
+dF <- left_join(dF,dF.15 %>% select(plot,Tmax15,maxVPD15,HeavyCrop15,LightCrop15))
+
+dF.16<-dF %>% filter(season=="2016/17"&tree_size=="all") %>% rename(HeavyCrop16=HeavyCrop,LightCrop16=LightCrop)
+dF <- left_join(dF,dF.16 %>% select(plot,HeavyCrop16,LightCrop16))
+
+#calculate resistance [and resilience] values using Isbell et al (2015) Nature
+#resistance = Yn/abs(Ye-Yn)
+#where Yn = mean productivity during normal year and Ye is yield during climate shock
+#resilience = abs(Ye-Yn)/abs(Y[e+1]-Yn)
+#where Y[e+1] = productivity during the year after a climate event.
+
 dF <- dF %>% distinct(plot,tree_size,season,.keep_all = T) %>% 
   mutate(anom_heavycrop14=HeavyCrop-HeavyCrop14,HC_log=log(HeavyCrop/HeavyCrop14),LC_log=log(LightCrop/LightCrop14)) %>% 
-  na_if(-Inf) %>% na_if(Inf)
- 
+  na_if(-Inf) %>% na_if(Inf) 
 
-clim_lag<-bind_rows(dF.14 %>% rename(Tmax_lag=Tmax14,VPD_lag=maxVPD14) %>% select(plot,season,Tmax_lag,VPD_lag),
-                    dF.15 %>% rename(Tmax_lag=Tmax15,VPD_lag=maxVPD15) %>%  select(plot,season,Tmax_lag,VPD_lag))
+dF2 <- dF %>% filter(tree_size=="all") %>% mutate(resist.15=HeavyCrop14/abs(HeavyCrop15-HeavyCrop14),resist.16=HeavyCrop14/abs(HeavyCrop16-HeavyCrop14))
 
-clim_lag<-clim_lag %>% mutate(season=replace(season,season=="2015/16","2016/17"),season=replace(season,season=="2014/15","2015/16"))
+
+#plot yield of farms over three years
+yld_summ <- dF2 %>% group_by(season) %>% summarise(yld.kg=mean(HeavyCrop),sd=sd(HeavyCrop))
+sm<-aov(HeavyCrop~factor(season),data=dF2)
+summary(sm)
+TukeyHSD(sm)
+
+g1<-ggplot() + geom_point(data=dF2,aes(factor(season),HeavyCrop),color="light grey") + 
+  geom_line(data=dF2,aes(factor(season),HeavyCrop,group=plot),color="light grey") +
+  theme(legend.position="none") + ylab("Tree Yield [kg]") + xlab("Season")  +
+  theme_classic() + geom_point(data=yld_summ,aes(x=factor(season),y=yld.kg),size=3) +
+  geom_errorbar(data=yld_summ,aes(x=factor(season),ymin=yld.kg-sd,ymax=yld.kg+sd),width=0.05,size=1) +
+  theme(text = element_text(size = 16))
+
+#clim_lag<-bind_rows(dF.14 %>% rename(Tmax_lag=Tmax14,VPD_lag=maxVPD14) %>% select(plot,season,Tmax_lag,VPD_lag),
+#                    dF.15 %>% rename(Tmax_lag=Tmax15,VPD_lag=maxVPD15) %>%  select(plot,season,Tmax_lag,VPD_lag))
+
+#clim_lag<-clim_lag %>% mutate(season=replace(season,season=="2015/16","2016/17"),season=replace(season,season=="2014/15","2015/16"))
   
-dF<-left_join(dF,clim_lag,by=c("plot","season"))
+#dF<-left_join(dF,clim_lag,by=c("plot","season"))
+
+#plot resistance of farms over three years
+dF3<-bind_rows(dF2 %>% filter(season=="2015/16") %>% select(-resist.16) %>% rename(resist=resist.15),
+               dF2 %>% filter(season=="2016/17") %>% select(-resist.15) %>% rename(resist=resist.16))
+yld_summ1 <- dF3 %>% group_by(season) %>% summarise(resist=mean(resist))
+yld_summ1.sd <- dF3 %>% group_by(season) %>% summarise(sd=sd(resist))
+yld_summ1<-left_join(yld_summ1,yld_summ1.sd,by="season")
+sm1<-aov(resist~factor(season),data=dF3)
+summary(sm1)
+TukeyHSD(sm1)
+
+g2<-ggplot() + geom_point(data=dF3,aes(factor(season),resist),color="light grey") + 
+  geom_line(data=dF3,aes(factor(season),resist,group=plot),color="light grey") +
+  theme(legend.position="none") + ylab("Resistance") + xlab("Season")  +
+  theme_classic() + geom_point(data=yld_summ1,aes(x=factor(season),y=resist),size=3) +
+  geom_errorbar(data=yld_summ1,aes(x=factor(season),ymin=resist-sd,ymax=resist+sd),width=0.05,size=1) +
+  theme(text = element_text(size = 16))
+
+ggpubr::ggarrange(g1,g2,ncol=2,nrow=1)
+ggsave("/Users/alex/Documents/Research/Africa/ECOLIMITS/Pubs/ElNino/Cocoa/YieldResistanceComparisons.pdf", height=5, width=10)
 
 #histogram of anomalies
-g1<-ggplot(dF,aes(anom_heavycrop)) + geom_histogram(stat="bin",bins=50,aes(fill=season)) + theme_classic() + xlab("Heavy Crop Anomaly")
-g2<-ggplot(dF,aes(anom_lightcrop)) + geom_histogram(stat="bin",bins=50,aes(fill=season)) + theme_classic() + xlab("Light Crop Anomaly")
-g3<-ggplot(dF,aes(anom_cpb)) + geom_histogram(stat="bin",bins=50,aes(fill=season)) + theme_classic() + xlab("Capsid Loss Anomaly")
-g4<-ggplot(dF,aes(anom_bp)) + geom_histogram(stat="bin",bins=50,aes(fill=season)) + theme_classic() + xlab("Black Pod Loss Anomaly")
-ggarrange(g1,g2,g3,g4,ncol=2,nrow=2,common.legend = T)
-ggsave("/Users/alex/Documents/Research/Africa/ECOLIMITS/Pubs/ElNino/Cocoa/Anomaly_histograms.pdf")
+#g1<-ggplot(dF,aes(anom_heavycrop)) + geom_histogram(stat="bin",bins=50,aes(fill=season)) + theme_classic() + xlab("Heavy Crop Anomaly")
+#g2<-ggplot(dF,aes(anom_lightcrop)) + geom_histogram(stat="bin",bins=50,aes(fill=season)) + theme_classic() + xlab("Light Crop Anomaly")
+#g3<-ggplot(dF,aes(anom_cpb)) + geom_histogram(stat="bin",bins=50,aes(fill=season)) + theme_classic() + xlab("Capsid Loss Anomaly")
+#g4<-ggplot(dF,aes(anom_bp)) + geom_histogram(stat="bin",bins=50,aes(fill=season)) + theme_classic() + xlab("Black Pod Loss Anomaly")
+#ggpubr::ggarrange(g1,g2,g3,g4,ncol=2,nrow=2,common.legend = T)
+#ggsave("/Users/alex/Documents/Research/Africa/ECOLIMITS/Pubs/ElNino/Cocoa/Anomaly_histograms.pdf")
 
 #histogram of yields
-g1<-ggplot(dF,aes(HeavyCrop)) + geom_freqpoly(stat="bin",bins=25,aes(color=season)) + theme_classic() + xlab("Heavy Crop [kg/tree]")
-g2<-ggplot(dF,aes(LightCrop)) + geom_freqpoly(stat="bin",bins=25,aes(color=season)) + theme_classic() + xlab("Light Crop [kg/tree]")
-g3<-ggplot(dF,aes(PropCPB)) + geom_freqpoly(stat="bin",bins=15,aes(color=season)) + theme_classic() + xlab("Capsid Incidence [Proportion]")
-g4<-ggplot(dF,aes(PropBP)) + geom_freqpoly(stat="bin",bins=15,aes(color=season)) + theme_classic() + xlab("Black Pod Incidence [Proportion]")
-ggarrange(g1,g2,g3,g4,ncol=2,nrow=2,common.legend = T)
-ggsave("/Users/alex/Documents/Research/Africa/ECOLIMITS/Pubs/ElNino/Cocoa/SeasonalMeasures_histograms.pdf")
+#g1<-ggplot(dF,aes(HeavyCrop)) + geom_freqpoly(stat="bin",bins=25,aes(color=season)) + theme_classic() + xlab("Heavy Crop [kg/tree]")
+#g2<-ggplot(dF,aes(LightCrop)) + geom_freqpoly(stat="bin",bins=25,aes(color=season)) + theme_classic() + xlab("Light Crop [kg/tree]")
+#g3<-ggplot(dF,aes(PropCPB)) + geom_freqpoly(stat="bin",bins=15,aes(color=season)) + theme_classic() + xlab("Capsid Incidence [Proportion]")
+#g4<-ggplot(dF,aes(PropBP)) + geom_freqpoly(stat="bin",bins=15,aes(color=season)) + theme_classic() + xlab("Black Pod Incidence [Proportion]")
+#ggpubr::ggarrange(g1,g2,g3,g4,ncol=2,nrow=2,common.legend = T)
+#ggsave("/Users/alex/Documents/Research/Africa/ECOLIMITS/Pubs/ElNino/Cocoa/SeasonalMeasures_histograms.pdf")
 
 #identify farms with consistently low yields
 #find bottom 50% of yields for each season
 yield.1 <- dF %>% filter(season=="2014/15"&tree_size=="all") 
-q.yield.1<-quantile(yield.1$HeavyCrop)
 yield.2 <- dF %>% filter(season=="2015/16"&tree_size=="all") 
+q.yield.1<-quantile(yield.1$HeavyCrop)
 q.yield.2<-quantile(yield.2$HeavyCrop)
 yield.3 <- dF %>% filter(season=="2016/17"&tree_size=="all") 
 q.yield.3<-quantile(yield.3$HeavyCrop)
@@ -55,7 +100,7 @@ dF <- dF %>% filter(tree_size=="all") %>% mutate(low.yield=0) %>% mutate(low.yie
                                               low.yield=replace(low.yield,season=="2015/16"&HeavyCrop<q.yield.2[3],1),
                                               low.yield=replace(low.yield,season=="2016/17"&HeavyCrop<q.yield.3[3],1))
 var.yield <- dF %>% group_by(plot) %>% summarise(no=sum(as.numeric(low.yield))) %>% mutate(low.plot=0) %>% mutate(low.plot=replace(low.plot,no==3,1))
-dF <- left_join(dF,var.yield %>% select(plot,low.plot))
+dF <- left_join(dF,var.yield %>% dplyr::select(plot,low.plot))
 
 corr_dF<-dF %>% select(-Transect,-tree_size,-season,-plot)
 
