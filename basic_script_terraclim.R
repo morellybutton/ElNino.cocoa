@@ -5,13 +5,13 @@ library(RcppRoll); library(visreg)
 
 setwd("/Volumes/ELDS/ECOLIMITS/Ghana/Kakum/")
 # --- Data prep ----------------------------------------------------------------------------------
-clim <- read_csv(paste0(getwd(),"/Analysis/ElNino/TerraClim_tmax.csv"), guess_max = 1e5) %>% 
+clim <- read_csv(paste0(getwd(),"/Analysis/ElNino/TerraClim_tmax_1960.csv"), guess_max = 1e5) %>% 
   mutate(Date=as.Date(Date,format="%d/%m/%Y")) %>% mutate(year=year(Date),month=month(Date)) %>%
   select(Date, mean,year,month) %>% rename(tmax=mean) %>% 
   mutate(tmax=tmax/10) %>% 
   arrange(Date) %>% 
   mutate(mx_tmax = roll_maxr(tmax, n=12, fill=NA))
-tmp <- clim %>% filter(year>=1986 & year <= 2017) %>% 
+tmp <- clim %>% filter(year>=1960 & year <= 2017) %>% 
   group_by(month) %>% 
   summarize(u_tmax = mean(tmax, na.rm=T), 
             u_mx_tmax = mean(mx_tmax, na.rm=T))
@@ -19,32 +19,32 @@ clim <- left_join(clim, tmp, by="month")
 clim <- clim %>% mutate(tmax_anom = tmax-u_tmax, 
                         mx_tmax_anom = mx_tmax - u_mx_tmax) 
 
-vpd <- read_csv(paste0(getwd(),"/Analysis/ElNino/TerraClim_vpd.csv")) %>% 
+vpd <- read_csv(paste0(getwd(),"/Analysis/ElNino/TerraClim_vpd_1960.csv")) %>% 
   mutate(Date=as.Date(Date,format="%d/%m/%Y")) %>% mutate(year=year(Date),month=month(Date)) %>%
   select(Date, mean,year,month) %>% rename(vpd=mean) %>% mutate(vpd=vpd/100)
 
-tmp <- vpd %>% filter(year>=1986 & year <= 2017) %>% 
+tmp <- vpd %>% filter(year>=1960 & year <= 2017) %>% 
   group_by(month) %>% 
   summarize(u_vpd = mean(vpd, na.rm=T)) #to get kPa
 vpd <- left_join(vpd,tmp,by="month")
 
 clim <- left_join(clim,vpd, by=c("Date","month","year"))
 
-pet <- read_csv(paste0(getwd(),"/Analysis/ElNino/TerraClim_pet.csv")) %>% 
+pet <- read_csv(paste0(getwd(),"/Analysis/ElNino/TerraClim_pet_1960.csv")) %>% 
   mutate(Date=as.Date(Date,format="%d/%m/%Y")) %>% mutate(year=year(Date),month=month(Date)) %>%
   select(Date, mean,year,month) %>% rename(pet=mean) %>% mutate(pet=pet/10)
 
-tmp <- pet %>% filter(year>=1986 & year <= 2017) %>% 
+tmp <- pet %>% filter(year>=1960 & year <= 2017) %>% 
   group_by(month) %>% 
   summarize(u_pet = mean(pet, na.rm=T))
 pet <- left_join(pet,tmp,by="month")
 
 clim <- left_join(clim,pet, by=c("Date","month","year"))
 
-ppt <- read_csv(paste0(getwd(),"/Analysis/ElNino/TerraClim_ppt.csv")) %>% 
+ppt <- read_csv(paste0(getwd(),"/Analysis/ElNino/TerraClim_ppt_1960.csv")) %>% 
   mutate(Date=as.Date(Date,format="%d/%m/%Y")) %>% mutate(year=year(Date),month=month(Date)) %>%
   select(Date, mean,year,month) %>% rename(ppt=mean) 
-tmp <- ppt %>% filter(year>=1986 & year <= 2017) %>% 
+tmp <- ppt %>% filter(year>=1960 & year <= 2017) %>% 
   group_by(month) %>% 
   summarize(u_precip = mean(ppt, na.rm=T))
 ppt <- left_join(ppt,tmp,by="month")
@@ -52,7 +52,7 @@ ppt <- left_join(ppt,tmp,by="month")
 clim <- left_join(clim,ppt, by=c("Date","month","year"))
 clim <- clim %>% mutate(vpd_anom = vpd-u_vpd,pet_anom = pet-u_pet,precip_anom = ppt-u_precip) 
 
-tmp <- clim %>% filter(year>=1986 & year <= 2016) %>% 
+tmp <- clim %>% filter(year>=1960 & year <= 2016) %>% 
   group_by(month) %>% 
   summarize(vpd_sigma = sd(vpd, na.rm=T),
             pet_sigma = sd(pet, na.rm=T), 
@@ -80,7 +80,7 @@ clim <- clim %>% arrange(Date) %>%
          pet_anom_sigma_3mo = roll_meanr(pet_anom_sigma, n=3)) %>% 
   ungroup()
 
-write_csv(clim,paste0(getwd(),"/Analysis/ElNino/terraclim_anomalies.csv"))
+write_csv(clim,paste0(getwd(),"/Analysis/ElNino/terraclim_anomalies_1960.csv"))
 
 
 

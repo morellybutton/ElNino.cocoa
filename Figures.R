@@ -3,7 +3,15 @@
 library(tidyverse)
 library(ggpubr)
 
-setwd("/Volumes/ELDS/ECOLIMITS/Ghana/Kakum/")
+#setwd("/Users/AMOREL001/Google Drive/Research/Africa/ECOLIMITS1")
+
+folder_names<-"/Users/AMOREL001/Google Drive/Research/"
+#data folder
+dtemp<-"Africa/ECOLIMITS1/ECOLIMITS2019/Kakum"
+#pubs folder
+ptemp<-"Africa/ECOLIMITS1/ElNino/Cocoa"
+
+setwd(paste0(folder_names,dtemp))
 
 dF<-read.csv(paste0(getwd(),"/Analysis/ES/Yield_anomalies.csv"))
 
