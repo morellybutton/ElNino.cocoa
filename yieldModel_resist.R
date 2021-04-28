@@ -2,9 +2,14 @@
 library(tidyverse)
 #library(ggpubr)
 
-setwd("/Volumes/ELDS/ECOLIMITS/Ghana/Kakum/")
-#year="2015"
-#season="1516"
+
+folder_names<-"/Users/AMOREL001/Google Drive/Research/"
+#data folder
+dtemp<-"Africa/ECOLIMITS1/ECOLIMITS2019/Kakum"
+#pubs folder
+ptemp<-"/Publications/2021/YieldResistance/"
+
+setwd(paste0(folder_names,dtemp))
 
 #look at lag effects of microclimate on yield
 dF<-read.csv(paste0(getwd(),"/Analysis/ES/Yield_anomalies.csv"))
@@ -17,6 +22,8 @@ dF <- left_join(dF,dF.15 %>% select(plot,Tmax15,maxVPD15,HeavyCrop15,LightCrop15
 
 dF.16<-dF %>% filter(season=="2016/17"&tree_size=="all") %>% rename(HeavyCrop16=HeavyCrop,LightCrop16=LightCrop)
 dF <- left_join(dF,dF.16 %>% select(plot,HeavyCrop16,LightCrop16))
+
+
 
 #calculate resistance [and resilience] values using Isbell et al (2015) Nature
 #resistance = Yn/abs(Ye-Yn)
@@ -69,7 +76,8 @@ g2<-ggplot() + geom_point(data=dF3,aes(factor(season),resist),color="light grey"
   theme(text = element_text(size = 16))
 
 ggpubr::ggarrange(g1,g2,ncol=2,nrow=1)
-ggsave("/Users/alex/Documents/Research/Africa/ECOLIMITS/Pubs/ElNino/Cocoa/YieldResistanceComparisons.pdf", height=5, width=10)
+ggsave(paste0(folder_names,ptemp,"/YieldResistanceComparisons.pdf"), height=5, width=10)
+
 
 #histogram of anomalies
 #g1<-ggplot(dF,aes(anom_heavycrop)) + geom_histogram(stat="bin",bins=50,aes(fill=season)) + theme_classic() + xlab("Heavy Crop Anomaly")
@@ -89,28 +97,28 @@ ggsave("/Users/alex/Documents/Research/Africa/ECOLIMITS/Pubs/ElNino/Cocoa/YieldR
 
 #identify farms with consistently low yields
 #find bottom 50% of yields for each season
-yield.1 <- dF %>% filter(season=="2014/15"&tree_size=="all") 
-yield.2 <- dF %>% filter(season=="2015/16"&tree_size=="all") 
-q.yield.1<-quantile(yield.1$HeavyCrop)
-q.yield.2<-quantile(yield.2$HeavyCrop)
-yield.3 <- dF %>% filter(season=="2016/17"&tree_size=="all") 
-q.yield.3<-quantile(yield.3$HeavyCrop)
+#yield.1 <- dF %>% filter(season=="2014/15"&tree_size=="all") 
+#yield.2 <- dF %>% filter(season=="2015/16"&tree_size=="all") 
+#q.yield.1<-quantile(yield.1$HeavyCrop)
+#q.yield.2<-quantile(yield.2$HeavyCrop)
+#yield.3 <- dF %>% filter(season=="2016/17"&tree_size=="all") 
+#q.yield.3<-quantile(yield.3$HeavyCrop)
 
-dF <- dF %>% filter(tree_size=="all") %>% mutate(low.yield=0) %>% mutate(low.yield=replace(low.yield,season=="2014/15"&HeavyCrop<q.yield.1[3],1),
-                                              low.yield=replace(low.yield,season=="2015/16"&HeavyCrop<q.yield.2[3],1),
-                                              low.yield=replace(low.yield,season=="2016/17"&HeavyCrop<q.yield.3[3],1))
-var.yield <- dF %>% group_by(plot) %>% summarise(no=sum(as.numeric(low.yield))) %>% mutate(low.plot=0) %>% mutate(low.plot=replace(low.plot,no==3,1))
-dF <- left_join(dF,var.yield %>% dplyr::select(plot,low.plot))
+#dF <- dF %>% filter(tree_size=="all") %>% mutate(low.yield=0) %>% mutate(low.yield=replace(low.yield,season=="2014/15"&HeavyCrop<q.yield.1[3],1),
+#                                              low.yield=replace(low.yield,season=="2015/16"&HeavyCrop<q.yield.2[3],1),
+#                                              low.yield=replace(low.yield,season=="2016/17"&HeavyCrop<q.yield.3[3],1))
+#var.yield <- dF %>% group_by(plot) %>% summarise(no=sum(as.numeric(low.yield))) %>% mutate(low.plot=0) %>% mutate(low.plot=replace(low.plot,no==3,1))
+#dF <- left_join(dF,var.yield %>% dplyr::select(plot,low.plot))
 
 corr_dF<-dF %>% select(-Transect,-tree_size,-season,-plot)
 
 s<-cor(corr_dF,use="complete.obs")
 s[is.na(s)]<-0
 
-library(MuMIn)
+#library(MuMIn)
 library(arm)
 library(car)
-library(AICcmodavg)
+#library(AICcmodavg)
 library(lattice)
 
 options(na.action = "na.omit")
@@ -141,6 +149,16 @@ dev.off()
 #pdf(paste0(getwd(),"/Analysis/ElNino/Plot.logenso16_norm.pdf"),width=8,height=8)
 #qqp(dF.enso16$HC_log,"norm")
 #dev.off()
+
+#Look at all years together
+pdf(paste0(getwd(),"/Analysis/ElNino/Plot.allyrs_norm.pdf"),width=8,height=8)
+qqp(dF$HeavyCrop,"norm")
+dev.off()
+
+pdf(paste0(getwd(),"/Analysis/ElNino/Plot.allyrs_lnorm.pdf"),width=8,height=8)
+qqp(dF$HeavyCrop,"lnorm")
+dev.off()
+
 
 #full model of resistence in yield (2015/2016)
 #for 2015 ###########
